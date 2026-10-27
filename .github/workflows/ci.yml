@@ -1,0 +1,22 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_DB: amrutam, POSTGRES_USER: amrutam, POSTGRES_PASSWORD: amrutam }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U amrutam -d amrutam"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm install
+      - run: npm test
+        env: { DATABASE_URL: postgres://amrutam:amrutam@localhost:5432/amrutam, JWT_SECRET: ci-test-secret-that-is-long-enough-32-chars }
+      - run: npm run lint
+      - run: docker build -t amrutam-api .

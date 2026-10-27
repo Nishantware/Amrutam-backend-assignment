@@ -1,0 +1,4 @@
+class AppError extends Error { constructor(status, message, code = 'REQUEST_FAILED') { super(message); this.status = status; this.code = code; } }
+function notFound(req, res) { res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Route not found', requestId: req.id } }); }
+function errorHandler(err, req, res, next) { if (res.headersSent) return next(err); const status = err.status || (err.name === 'ZodError' ? 400 : 500); const code = err.code || (status === 400 ? 'VALIDATION_ERROR' : 'INTERNAL_ERROR'); if (status >= 500) req.log?.error({ err, requestId: req.id }, 'Request failed'); res.status(status).json({ error: { code, message: status >= 500 ? 'An unexpected error occurred' : err.message, ...(err.name === 'ZodError' ? { details: err.issues.map(i => ({ path: i.path.join('.'), message: i.message })) } : {}), requestId: req.id } }); }
+module.exports = { AppError, notFound, errorHandler };

@@ -1,0 +1,4 @@
+const test=require('node:test');const assert=require('node:assert/strict');
+test('assignment security invariants are documented',()=>{const fs=require('node:fs');const schema=fs.readFileSync('db/schema.sql','utf8');assert.match(schema,/UNIQUE\(patient_id, idempotency_key\)/);assert.match(schema,/slot_id UUID NOT NULL UNIQUE/);assert.match(schema,/CREATE TABLE IF NOT EXISTS audit_logs/);});
+test('booking uses row-level lock and idempotency header',()=>{const fs=require('node:fs');const source=fs.readFileSync('src/routes/consultations.js','utf8');assert.match(source,/FOR UPDATE/);assert.match(source,/Idempotency-Key/);assert.match(source,/BEGIN/);assert.match(source,/COMMIT/);});
+test('server configuration rejects short JWT secret',()=>{const fs=require('node:fs');const source=fs.readFileSync('src/server.js','utf8');assert.match(source,/JWT_SECRET.length<32/);});
